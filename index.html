@@ -1,0 +1,163 @@
+<html ng-app="patientApp">
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+    <title>Patient Search</title>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.1/angular.min.js"></script>
+    <script>
+      var patientApp = angular.module('patientApp', []);
+      patientApp.controller('PatientCtrl', function ($scope, $http, $filter){
+        $http.get('patients.json').success(function(data) {
+          $scope.patients = data;
+        });
+
+        $scope.sortField =["mr",""];
+
+        $scope.sortby = "mr";
+
+        $scope.sortBy = [
+        { val: "name", name: 'NAME' }, { val:"mr", name: 'MR' }, { val:"idnum", name: 'ID NUM' }, { val: "prov", name: 'PROV' }, { val:"insurance", name: 'INSURANCE' }, { val:"address", name: 'ADDRESS' }, { val:"city", name: 'CITY' }, { val:"st", name: 'ST' }, { val:"phone", name: 'PHONE' }, { val:"dob", name: 'DOB' }, { val:"admit", name: 'ADMIT' }, { val:"dc", name: 'DC' }];
+
+        $scope.limit = {val: 10};
+
+        $scope.isLimit = function() {
+          return angular.isLimit($scope.limit.val);
+        }
+
+        $scope.descClick = function() {
+          $scope.sortField[0] =  '-' + $scope.sortby;
+        }
+
+        $scope.ascClick = function() {
+          $scope.sortField[0] = $scope.sortby;
+        }
+
+        $scope.reset = function() {
+          location.reload();
+        }
+
+        $scope.orderByHandler = function(val){
+          $scope.sortField[0] = val;
+          $scope.sortby = val;
+        }
+      });
+
+    </script>
+  </head>
+  
+  <body ng-controller="PatientCtrl" class="px-2 py-2">
+    <nav class="navbar navbar-light bg-light">
+      <span class="my-2 h2">Patient Menu</span>
+      <span><a href="" data-toggle="modal" data-target="#searchModal">Advanced Search</a></span>
+    </nav>
+    <!-- Table -->
+    <table class = "table table-striped table-bordered">
+      <!-- Table Head -->
+      <thead>
+      <tr class = "table-danger">
+        <th>Name</th>
+        <th>MR</th>
+        <th>ID NUM</th>
+        <th>PROV</th>
+        <th>INSURANCE</th>
+        <th>ADDRESS</th>
+        <th>CITY</th>
+        <th>ST</th>
+        <th>PHONE</th>
+        <th>DOB</th>
+        <th>ADMIT</th>
+        <th>DC</th>
+      </tr>
+    </thead>
+    <!-- Table Body -->
+    <tbody>
+      <tr ng-repeat="patient in rows =  (patients | filter:{mr: mrquery} |  filter:{prov: provider} |  filter:{name: namequery} | orderBy:sortField[0] | limitTo: limit.val)" >
+        <td>{{patient.name}}</td>
+        <td>{{patient.mr}}</td>
+        <td>{{patient.idnum}}</td>
+        <td>{{patient.prov }}</td>
+        <td>{{patient.insurance}}</td>
+        <td>{{patient.address}}</td>
+        <td>{{patient.city}}</td>
+        <td>{{patient.st}}</td>
+        <td>{{patient.phone}}</td>
+        <td>{{patient.dob | date: 'mediumDate'}}</td>
+        <td>{{patient.admit | date: 'mediumDate'}}</td>
+        <td>{{patient.dc | date: 'mediumDate'}}</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <p># of Patients: {{rows.length}}</p>
+
+  <!-- Modal -->
+  <div class="modal fade" id="searchModal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="searchModalLabel">Advanced Search</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form>
+            <div class="form-group row">
+              <label for="MR" class="col-sm-2 col-form-label">MR #:</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" id="MR" name="mrquery" ng-model="mrquery" ng-change="mrHandler(mrquery)" type="text">
+              </div>
+            </div>
+            <div class="form-group row">
+              <label for="Name" class="col-sm-2 col-form-label">NAME:</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" id="Name" name="namequery" 
+                ng-change="nameHandler(namequery)" ng-model="namequery" type="text">
+              </div>
+            </div>
+            <div class="form-group row">
+              <label for="Provider" class="col-sm-2 col-form-label">PROVIDER:</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" id="Provider" name="provider"
+                ng-change="provHandler(provider)" ng-model="provider" type="text">
+              </div>
+            </div>
+            <div class="form-group row">
+              <label for="Order" class="col-sm-2 col-form-label">ORDER:</label>
+              <div class="col-sm-10">
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" value="option1" ng-model="sortField[0]" ng-click="ascClick()" >
+                  <label class="form-check-label" for="inlineRadio1" >ASC</label>
+                </div>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" value="option2" ng-click="descClick()">
+                  <label class="form-check-label" ng-model="sortField[0]" for="inlineRadio2" >DESC</label>
+                </div>
+              </div>
+            </div>
+            <div class="input-group mb-3">
+              <label for="OrderBy" class="col-sm-2 col-form-label">ORDER BY:</label>
+                <select class="custom-select" name="orderby" ng-change="orderByHandler(thing.val)" ng-model="thing" ng-options="val as val.name for val in sortBy"></select>
+            </div>
+            <div class="form-group row">
+              <label for="LimitTo" class="col-sm-2 col-form-label">LIMIT TO:</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" id="LimitTo"
+                 ng-model="limit.val">
+              </div>
+            </div>    
+          </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-warning" ng-click="reset()">Reset</button>
+          <button type="button" class="btn btn-danger" data-dismiss="modal">Search</button>
+          <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
+  </body>
+</html>
